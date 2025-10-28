@@ -31,9 +31,10 @@ services:
   frontend:
     build:
       context: ./apps/frontend
+      args:
+        VITE_API_URL: ${VITE_API_URL:-http://backend:3000/api}
+        VITE_APP_NAME: ${VITE_APP_NAME:-Gadiel POS}
     env_file: .env
-    environment:
-      VITE_API_URL: http://backend:3000/api
     depends_on:
       - backend
     ports:

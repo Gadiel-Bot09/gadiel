@@ -50,7 +50,10 @@ TIMEZONE=America/Bogota
 CURRENCY=COP
 
 # Frontend
-VITE_API_URL=http://localhost:3000/api
+# Para despliegue remoto el script `server-setup.sh` actualizará este valor con
+# `https://<tu-backend>/api`. Para desarrollo local cámbialo a
+# `http://localhost:3000/api` antes de ejecutar el front.
+VITE_API_URL=https://api.midominio.com/api
 VITE_APP_NAME=Gadiel POS
 ```
 
@@ -92,7 +95,7 @@ VITE_APP_NAME=Gadiel POS
    - `FRONTEND_DOMAIN` / `BACKEND_DOMAIN`: dominios públicos que apuntan al servidor (se solicitarán de forma interactiva si no los defines).
    - `CADDY_EMAIL`: correo usado para la emisión de certificados Let's Encrypt (también se solicitará si no lo envías).
 
-3. El script instalará Docker Engine si no existe, clonará la última versión del repositorio, generará `.env` (copiado desde `.env.example`), preparará `deploy/Caddyfile` con los dominios y certificados HTTPS y ejecutará `docker compose up -d --build`.
+3. El script instalará Docker Engine si no existe, clonará la última versión del repositorio, generará `.env` (copiado desde `.env.example`), actualizará `VITE_API_URL` con `https://<BACKEND_DOMAIN>/api`, preparará `deploy/Caddyfile` con los dominios y certificados HTTPS y ejecutará `docker compose up -d --build`.
 4. Edita el archivo `.env` generado en `APP_DIR` con las credenciales reales (DB, JWT, etc.) y vuelve a ejecutar `docker compose up -d` si cambias los valores.
 
 Servicios publicados por defecto:

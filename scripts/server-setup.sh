@@ -153,6 +153,24 @@ EOF
   log "Archivo Caddyfile actualizado en $caddy_file. Asegúrate de apuntar los registros DNS A/AAAA al servidor antes de iniciar."
 }
 
+update_env_urls() {
+  local env_path="$APP_DIR/$ENV_FILE"
+
+  if [[ ! -f "$env_path" ]]; then
+    log "No se encontró $env_path; omitiendo actualización de variables."
+    return
+  fi
+
+  if [[ -n "${BACKEND_DOMAIN:-}" ]]; then
+    log "Actualizando VITE_API_URL en $env_path para https://$BACKEND_DOMAIN/api"
+    if grep -q '^VITE_API_URL=' "$env_path"; then
+      sed -i "s|^VITE_API_URL=.*|VITE_API_URL=https://$BACKEND_DOMAIN/api|" "$env_path"
+    else
+      echo "VITE_API_URL=https://$BACKEND_DOMAIN/api" >>"$env_path"
+    fi
+  fi
+}
+
 launch_stack() {
   log "Construyendo imágenes y levantando servicios con Docker Compose"
   (cd "$APP_DIR" && docker compose up -d --build)
@@ -163,6 +181,7 @@ install_dependencies
 clone_repository
 prepare_env
 configure_domains
+update_env_urls
 launch_stack
 
 log "Instalación automatizada completada."
