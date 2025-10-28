@@ -54,6 +54,59 @@ VITE_API_URL=http://localhost:3000/api
 VITE_APP_NAME=Gadiel POS
 ```
 
+## Publicación en GitHub y despliegue automatizado
+
+### 1. Crear un repositorio en GitHub
+
+1. Inicia sesión en GitHub y crea un repositorio vacío (por ejemplo `gadiel-pos`).
+2. En tu máquina local clona este proyecto y añade el remoto:
+
+   ```bash
+   git init
+   git remote add origin git@github.com:TU_USUARIO/gadiel-pos.git
+   git add .
+   git commit -m "chore: bootstrap gadiel pos"
+   git push -u origin main
+   ```
+
+   > También puedes usar GitHub CLI: `gh repo create TU_USUARIO/gadiel-pos --private --source=. --push`.
+
+### 2. Instalación automática en un servidor Ubuntu 22.04+
+
+1. Conéctate vía SSH al servidor (idealmente como un usuario con permisos `sudo`).
+2. Ejecuta el script de instalación automática que prepara Docker, clona el repositorio y levanta los contenedores:
+
+   ```bash
+   sudo REPO_URL=https://github.com/TU_USUARIO/gadiel-pos.git \
+     APP_DIR=/opt/gadiel-pos \
+     BRANCH=main \
+     bash scripts/server-setup.sh
+   ```
+
+   - `REPO_URL`: apunta al repositorio que acabas de crear.
+   - `APP_DIR`: ruta donde se clonará el proyecto en el servidor.
+   - `BRANCH`: rama a desplegar.
+
+3. El script instalará Docker Engine si no existe, clonará la última versión del repositorio, generará `.env` (copiado desde `.env.example`) y ejecutará `docker compose up -d --build`.
+4. Edita el archivo `.env` generado en `APP_DIR` con las credenciales reales (DB, JWT, etc.) y vuelve a ejecutar `docker compose up -d` si cambias los valores.
+
+Servicios publicados por defecto:
+
+- Backend REST: `http://TU_SERVIDOR:3000`
+- Frontend: `http://TU_SERVIDOR:5173`
+- Caddy (si configuras TLS y dominios en `deploy/Caddyfile`).
+
+### 3. Actualizar versiones desplegadas
+
+Cuando hagas cambios en `main`:
+
+```bash
+ssh usuario@tu-servidor
+cd /opt/gadiel-pos
+sudo git pull origin main
+sudo docker compose up -d --build
+```
+
 ## Instalación local
 
 ```bash
