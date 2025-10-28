@@ -64,15 +64,105 @@ prepare_env() {
   fi
 }
 
+configure_domains() {
+  FRONTEND_DOMAIN=${FRONTEND_DOMAIN:-}
+  BACKEND_DOMAIN=${BACKEND_DOMAIN:-}
+  CADDY_EMAIL=${CADDY_EMAIL:-}
+
+  if [[ -z "$FRONTEND_DOMAIN" ]]; then
+    read -rp "Dominio para el frontend (ej. pos.midominio.com): " FRONTEND_DOMAIN
+  fi
+
+  if [[ -z "$BACKEND_DOMAIN" ]]; then
+    read -rp "Dominio para la API/backend (ej. api.midominio.com): " BACKEND_DOMAIN
+  fi
+
+  if [[ -z "$CADDY_EMAIL" ]]; then
+    read -rp "Correo de contacto para certificados SSL (Let's Encrypt): " CADDY_EMAIL
+    if [[ -z "$CADDY_EMAIL" ]]; then
+      CADDY_EMAIL="admin@${FRONTEND_DOMAIN#*.}"
+      log "No se proporcionó correo, usando $CADDY_EMAIL"
+    fi
+  fi
+
+  if [[ -z "$FRONTEND_DOMAIN" || -z "$BACKEND_DOMAIN" ]]; then
+    echo "[ERROR] Debes especificar dominios válidos para frontend y backend." >&2
+    exit 1
+  fi
+
+  local caddy_file="$APP_DIR/deploy/Caddyfile"
+  mkdir -p "$(dirname "$caddy_file")"
+
+  log "Generando configuración de Caddy con certificados HTTPS para $FRONTEND_DOMAIN y $BACKEND_DOMAIN"
+
+  local tls_notice="  # Caddy gestionará automáticamente los certificados Let's Encrypt"
+
+  if [[ "$FRONTEND_DOMAIN" == "$BACKEND_DOMAIN" ]]; then
+    cat >"$caddy_file" <<EOF
+{
+  email $CADDY_EMAIL
+  acme_ca https://acme-v02.api.letsencrypt.org/directory
+}
+
+http://$FRONTEND_DOMAIN {
+  redir https://$FRONTEND_DOMAIN{uri}
+}
+
+$FRONTEND_DOMAIN {
+$tls_notice
+  encode gzip
+
+  @api path /api/*
+  handle @api {
+    reverse_proxy backend:3000
+  }
+
+  handle {
+    reverse_proxy frontend:4173
+  }
+}
+EOF
+  else
+    cat >"$caddy_file" <<EOF
+{
+  email $CADDY_EMAIL
+  acme_ca https://acme-v02.api.letsencrypt.org/directory
+}
+
+http://$FRONTEND_DOMAIN {
+  redir https://$FRONTEND_DOMAIN{uri}
+}
+
+$FRONTEND_DOMAIN {
+$tls_notice
+  encode gzip
+  reverse_proxy frontend:4173
+}
+
+http://$BACKEND_DOMAIN {
+  redir https://$BACKEND_DOMAIN{uri}
+}
+
+$BACKEND_DOMAIN {
+$tls_notice
+  reverse_proxy backend:3000
+}
+EOF
+  fi
+
+  log "Archivo Caddyfile actualizado en $caddy_file. Asegúrate de apuntar los registros DNS A/AAAA al servidor antes de iniciar."
+}
+
 launch_stack() {
   log "Construyendo imágenes y levantando servicios con Docker Compose"
   (cd "$APP_DIR" && docker compose up -d --build)
-  log "Servicios desplegados. Backend: http://localhost:3000 | Frontend: http://localhost:5173"
+  log "Servicios desplegados. Backend: https://$BACKEND_DOMAIN | Frontend: https://$FRONTEND_DOMAIN"
 }
 
 install_dependencies
 clone_repository
 prepare_env
+configure_domains
 launch_stack
 
 log "Instalación automatizada completada."

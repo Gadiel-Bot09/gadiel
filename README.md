@@ -74,27 +74,32 @@ VITE_APP_NAME=Gadiel POS
 ### 2. Instalación automática en un servidor Ubuntu 22.04+
 
 1. Conéctate vía SSH al servidor (idealmente como un usuario con permisos `sudo`).
-2. Ejecuta el script de instalación automática que prepara Docker, clona el repositorio y levanta los contenedores:
+2. Ejecuta el script de instalación automática que prepara Docker, clona el repositorio, configura dominios HTTPS y levanta los contenedores:
 
    ```bash
    sudo REPO_URL=https://github.com/TU_USUARIO/gadiel-pos.git \
      APP_DIR=/opt/gadiel-pos \
      BRANCH=main \
+     FRONTEND_DOMAIN=pos.midominio.com \
+     BACKEND_DOMAIN=api.midominio.com \
+     CADDY_EMAIL=admin@midominio.com \
      bash scripts/server-setup.sh
    ```
 
    - `REPO_URL`: apunta al repositorio que acabas de crear.
    - `APP_DIR`: ruta donde se clonará el proyecto en el servidor.
    - `BRANCH`: rama a desplegar.
+   - `FRONTEND_DOMAIN` / `BACKEND_DOMAIN`: dominios públicos que apuntan al servidor (se solicitarán de forma interactiva si no los defines).
+   - `CADDY_EMAIL`: correo usado para la emisión de certificados Let's Encrypt (también se solicitará si no lo envías).
 
-3. El script instalará Docker Engine si no existe, clonará la última versión del repositorio, generará `.env` (copiado desde `.env.example`) y ejecutará `docker compose up -d --build`.
+3. El script instalará Docker Engine si no existe, clonará la última versión del repositorio, generará `.env` (copiado desde `.env.example`), preparará `deploy/Caddyfile` con los dominios y certificados HTTPS y ejecutará `docker compose up -d --build`.
 4. Edita el archivo `.env` generado en `APP_DIR` con las credenciales reales (DB, JWT, etc.) y vuelve a ejecutar `docker compose up -d` si cambias los valores.
 
 Servicios publicados por defecto:
 
-- Backend REST: `http://TU_SERVIDOR:3000`
-- Frontend: `http://TU_SERVIDOR:5173`
-- Caddy (si configuras TLS y dominios en `deploy/Caddyfile`).
+- Backend REST: `https://api.midominio.com`
+- Frontend: `https://pos.midominio.com`
+- Redirección automática HTTP→HTTPS gestionada por Caddy.
 
 ### 3. Actualizar versiones desplegadas
 
