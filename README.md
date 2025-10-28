@@ -73,6 +73,26 @@ npm run dev --workspace apps/frontend
 
 La API expone `http://localhost:3000/api` y el front `http://localhost:5173`.
 
+## Previsualización automática (script)
+
+Para automatizar todo el flujo de instalación y levantar ambos servicios de desarrollo en una sola instrucción, usa el script
+`scripts/dev-preview.sh`:
+
+```bash
+bash scripts/dev-preview.sh
+```
+
+El script realiza las siguientes tareas:
+
+1. Copia `.env.example` → `.env` si no existe.
+2. Instala dependencias del backend y frontend.
+3. Genera el cliente Prisma.
+4. Aplica migraciones existentes (`prisma migrate deploy`) o sincroniza el esquema con `prisma db push` cuando no hay migraciones.
+5. Ejecuta el seed de datos demo.
+6. Arranca la API NestJS en `http://localhost:3000/api` y el frontend en `http://localhost:5173` (ambos procesos se cierran con `Ctrl+C`).
+
+Ideal para una previsualización rápida del sistema POS sin ejecutar manualmente cada paso.
+
 ## Pruebas y lint
 
 ```bash
