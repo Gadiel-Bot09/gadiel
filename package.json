@@ -1,0 +1,17 @@
+{
+  "name": "gadiel-pos-platform",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Multi-tenant POS platform for retail and restaurants (COP, ES-CO).",
+  "workspaces": [
+    "apps/frontend",
+    "apps/backend"
+  ],
+  "scripts": {
+    "lint": "npm run lint --workspaces",
+    "test": "npm run test --workspaces",
+    "test:e2e": "npm run test:e2e --workspace apps/frontend && npm run test:e2e --workspace apps/backend",
+    "format": "npm run format --workspaces",
+    "dev:preview": "bash scripts/dev-preview.sh"
+  }
+}

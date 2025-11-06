@@ -1,0 +1,24 @@
+{
+  email admin@example.com
+  acme_ca https://acme-v02.api.letsencrypt.org/directory
+}
+
+:80 {
+  redir https://{host}{uri}
+}
+
+:443 {
+  tls {
+    dns cloudflare {env.CLOUDFLARE_API_TOKEN}
+  }
+
+  route {
+    handle_path /api/* {
+      reverse_proxy backend:3000
+    }
+
+    handle {
+      reverse_proxy frontend:4173
+    }
+  }
+}
